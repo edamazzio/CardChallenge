@@ -87,10 +87,9 @@ fun sum_cards [] = 0
     menos de que todas las cartas en held-cards sean del mismo color, en ese caso, el score sería el
     preliminary score dividido entre 2 (con redondeo de piso).
 *)
-fun score ([], _) = 0
-  | score (held_cards as hd::tail, goal) =
+fun score (held_cards, goal) =
     let fun preliminaryScore (sum, goal) =
-      if sum > goal then 3*(sum-goal)
+      if (sum > goal) then (3*(sum-goal))
       else (goal - sum);
     in
       if all_same_color held_cards then floor (real( preliminaryScore(sum_cards held_cards, goal))/ real 2)
@@ -100,11 +99,20 @@ fun score ([], _) = 0
 
 fun officiate (card_list, move_list, goal) =
     (* Si move_list es vacía, retorna el score*)
-    let fun officiate_helper (card_list, [], goal, held_cards) =  score(card_list, goal)
+    let fun officiate_helper (card_list, [], goal, held_cards) =  score(held_cards, goal)
+     | officiate_helper ([], move_list as move_list_hd::move_list_tl, goal, held_cards) =
+     (case move_list_hd of
+       (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
+       Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(card_list, c, IllegalMove))
+       (* Si es Draw,
+       si la card_list está vacía, retorna score,
+       si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
+     | Draw => score(held_cards, goal))
+
 
     (* Si vienen todos los parámetros *)
       | officiate_helper (card_list as card_list_hd::card_list_tl, move_list as move_list_hd::move_list_tl, goal, held_cards) =
-        if sum_cards card_list > goal then  score(card_list, goal)
+        if (sum_cards held_cards > goal) then  score(held_cards, goal)
         else
           (case move_list_hd of
             (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
@@ -112,18 +120,18 @@ fun officiate (card_list, move_list, goal) =
             (* Si es Draw,
             si la card_list está vacía, retorna score,
             si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
-          | Draw => if card_list = [] then  score(card_list, goal)
-                    else officiate_helper(card_list_tl, move_list_tl, goal, card_list_hd::held_cards));
+          | Draw => officiate_helper(card_list_tl, move_list_tl, goal, card_list_hd::held_cards));
     in
       officiate_helper(card_list, move_list, goal, [])
     end
 
-
-val test1 = card_color (Clubs, Num 2) = Black;
-val test2 = card_value (Clubs, Num 2) = 2;
-val test3 = remove_card ([(Hearts, Ace)], (Hearts, Ace), IllegalMove) = [];
-val test4 = all_same_color [(Hearts, Ace), (Hearts, Ace)] = true;
-val test5 = sum_cards [(Clubs, Num 2),(Clubs, Num 2)] = 4;
-val test6 = score ([(Hearts, Num 2),(Clubs, Num 4)],10) = 4;
-val test7 = officiate ([(Hearts, Num 2),(Clubs, Num 4)],[Draw], 15) = 6;
-val test8 = officiate ([(Clubs,Ace),(Spades,Ace),(Clubs,Ace),(Spades,Ace)],[Draw,Draw,Draw,Draw,Draw],42)= 3;
+(*Pruebas de cada funcion, especificadas por el profesor*)
+(* val test1 = card_color (Clubs, Num 2)
+val test2 = card_value (Clubs, Num 2)
+val test3 = remove_card ([(Clubs, Num 3),(Hearts, Ace),(Clubs, Num 2)], (Hearts, Ace),IllegalMove)
+	    handle IllegalMove => []
+val test4 = all_same_color [(Hearts, Ace), (Hearts, Ace)]
+val test5 = sum_cards [(Clubs, Num 2),(Clubs, Num 2)]
+val test6 = score ([(Hearts, Num 2),(Clubs, Num 4)],10)
+val test7 = officiate ([(Hearts, Num 2),(Clubs, Num 4)],[Draw], 15)
+val test8 = officiate ([(Clubs,Ace),(Spades,Ace),(Clubs,Ace),(Spades,Ace)],[Draw,Draw,Draw,Draw,Draw],42) *)
