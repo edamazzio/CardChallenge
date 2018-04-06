@@ -1,12 +1,12 @@
 (*
-1 • val card_color = fn : card -> color
-2 • val card_value = fn : card -> int
-3 • val remove_card = fn : card list * card * exn -> card list
-4 • val all_same_color = fn : card list -> bool
-5 • val sum_cards = fn : card list -> int
-6 • val score = fn : card list * int -> int
-7 • val officiate = fn : card list * move list * int -> int
+Esteban González Damazio
+Alejandro Jimenez Gamboa
+Lenguajes de programacion
+Proyecto 2 "Card Challenge"
 *)
+
+(*Tipos de datos usados para el proyecto, simulan una baraja de naipes
+  dados por el profesor*)
 datatype suit = Clubs
               | Diamonds
               | Hearts
@@ -17,11 +17,14 @@ datatype rank = Jack
               | Ace
               | Num of int;
 type card = suit * rank;
+
+(*Estos tipos de datos son parte de las mecanicas del juego*)
 datatype color = Red | Black
 datatype move = Discard of card | Draw
+(*Excepcion usada cuando el jugador intenta hacer un movimiento no permitido*)
 exception IllegalMove
 
-
+(*Funcion 1 Recibe una carta y dice si es de color Roja o Negra*)
 fun card_color c =
     case c of
        (Clubs, _) => Black
@@ -29,7 +32,8 @@ fun card_color c =
      | (Hearts, _) => Red
      | (Spades, _) => Black;
 
-
+(*Funcion 2 Recibe una carta y retorna que valor tiene, los numeros valen igual, el as vale 11
+  y las demas valen 10*)
 fun card_value c =
     case c of
        (_,Jack)  => 10
@@ -38,19 +42,30 @@ fun card_value c =
      | (_,Ace) => 11
      | (_, Num n)=> n;
 
+(*Funcion 3 Recibe una lista de cartas y una carta, busca la carta en la lista y la elimina,
+  si la carta aparece mas de una vez solo elimina la primera aparicion, tira una excepcion
+  si la carta no esta*)
+(*fun remove_card (cl, c) =
+    case cl of
+      [] => []
+      | xs::ys => if c = xs then remove_card(ys,c)
+                  else xs::remove_card(ys,c);*)
 
-fun remove_card (cl, c, exc) =
+fun remove_card (cl: card list, c : card, e) =
   let fun found ([], c) = false
     | found (cl as hd::tl, c) = if hd = c then true else found (tl, c)
     in
       if found(cl, c) then
         (case cl of
             []=>[]
-            | xs::ys => if c = xs then remove_card(ys,c, exc)
-                        else xs::remove_card(ys,c, exc))
-      else raise exc
+            | xs::ys => if c = xs then remove_card(ys,c,e)
+                        else xs::remove_card(ys,c,e))
+      else raise e
     end
 
+(*Funcion 4 Recibe una lista de cartas, revisa los colores de cada carta de la lista,
+  retorna true si tienen el mismo color, apenas encuentra una de diferente color
+  retorna false*)
 fun all_same_color cl =
     case cl of
        [] => true
@@ -59,11 +74,19 @@ fun all_same_color cl =
                         | Red => (card_color nk = Red) andalso (all_same_color (nk::tl)))
       | hd::[] => true
 
-
+(*Funcion 5 Recibe una lista, utiliza recursion de cola para sumar
+  los valores de las cartas que vengan en la lista*)
 fun sum_cards [] = 0
   | sum_cards (c as hd::tl) = card_value hd + sum_cards tl;
 
-
+(*Funcion 6 Recibe una lista y un comodin
+  El score funciona de la siguiente manera:
+    sea sum la suma de los valores de held-cards. Si sum es mayor que goal,
+    entonces el preliminary score es tres veces (sum – goal), si no, entonces el preliminay score es
+    (goal – sum). Finalmente, se puede decir que score (el resultado final) es el preliminary score, a
+    menos de que todas las cartas en held-cards sean del mismo color, en ese caso, el score sería el
+    preliminary score dividido entre 2 (con redondeo de piso).
+*)
 fun score ([], _) = 0
   | score (held_cards as hd::tail, goal) =
     let fun preliminaryScore (sum, goal) =
@@ -75,16 +98,13 @@ fun score ([], _) = 0
     end
 
 
-
-(* 7 • val officiate = fn : card list * move list * int -> int *)
-fun officiate ([], [], _) = 0
-  | officiate (card_list, move_list, goal) =
+fun officiate (card_list, move_list, goal) =
     (* Si move_list es vacía, retorna el score*)
     let fun officiate_helper (card_list, [], goal, held_cards) =  score(card_list, goal)
 
     (* Si vienen todos los parámetros *)
       | officiate_helper (card_list as card_list_hd::card_list_tl, move_list as move_list_hd::move_list_tl, goal, held_cards) =
-        if sum_cards card_list > goal orelse move_list = [] then  score(card_list, goal)
+        if sum_cards card_list > goal then  score(card_list, goal)
         else
           (case move_list_hd of
             (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
@@ -97,7 +117,6 @@ fun officiate ([], [], _) = 0
     in
       officiate_helper(card_list, move_list, goal, [])
     end
-
 
 
 val test1 = card_color (Clubs, Num 2) = Black;
