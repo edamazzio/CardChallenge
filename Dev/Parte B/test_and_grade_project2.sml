@@ -23,11 +23,17 @@ val test4 = if officiate ([(Clubs, Num 1),(Spades, Ace),(Diamonds, Num 8),(Heart
 		       10) = 3
 	     then 1 else 0;
 
-val test5 = 0;
+val test5 = if officiate ([(Clubs, Num 1),(Spades, Ace),(Diamonds, Num 8),(Hearts, Ace),(Diamonds, Num 5),(Diamonds, Jack),(Diamonds, King),(Spades, Num 1),(Clubs, Num 8),(Hearts, Num 3),(Spades, Num 7),(Diamonds, Queen),(Clubs, Ace),(Clubs, Jack),(Hearts, Num 7),(Diamonds, Num 5),(Spades, Num 4),(Hearts, Num 6),(Clubs, Num 8),(Spades, Num 8)],
+		       [Draw, Draw, Discard(Clubs, Num 1), Draw, Draw, Discard(Hearts, Ace), Draw, Draw, Draw, Discard(Diamonds, Jack), Draw, Draw, Draw, Discard(Spades, Num 1), Draw, Draw],
+		       50) = 6
+	     then 1 else 0;
 
 
 
-val test6 = 0;
+val test6 = if officiate ([(Clubs, Num 1),(Spades, Ace),(Diamonds, Num 8),(Hearts, Ace),(Diamonds, Num 5),(Diamonds, Jack),(Diamonds, King),(Spades, Num 1),(Clubs, Num 8),(Hearts, Num 3),(Spades, Num 7),(Diamonds, Queen),(Clubs, Ace),(Clubs, Jack),(Hearts, Num 7),(Diamonds, Num 5),(Spades, Num 4),(Hearts, Num 6),(Clubs, Num 8),(Spades, Num 8)],
+		       [Draw, Draw, Discard(Clubs, Num 1), Draw, Draw, Discard(Hearts, Ace), Draw, Draw, Draw, Discard(Diamonds, Jack), Draw, Draw, Draw, Discard(Spades, Num 1), Draw, Draw],
+		       100) = 38
+	     then 1 else 0;
 
 val test7 = if officiate([],[],0) = 0 then 1 else 0;
 
@@ -36,9 +42,15 @@ val test8 = if officiate ([(Hearts, Ace),(Diamonds, Num 5),(Diamonds, Jack),(Dia
 		       100) = 44
 	    then 1 else 0;
 
-val test9 = 0;
+val test9 = if officiate ([(Hearts, Ace),(Diamonds, Num 5),(Diamonds, Jack),(Diamonds, King),(Spades, Num 1),(Clubs, Num 8),(Hearts, Num 3),(Spades, Num 7),(Clubs, Jack),(Hearts, Num 7),(Diamonds, Num 5),(Clubs, Num 8),(Spades, Num 8)],
+		       [Draw,Discard(Hearts, Ace)],
+		       50) = 25
+	    then 1 else 0;
 
-val test10 = 0;
+val test10 = if officiate ([(Hearts, Ace),(Diamonds, Num 5),(Diamonds, Jack),(Diamonds, King),(Spades, Num 1),(Clubs, Num 8),(Hearts, Num 3),(Spades, Num 7),(Clubs, Jack),(Hearts, Num 7),(Diamonds, Num 5),(Clubs, Num 8),(Spades, Num 8)],
+		       [Draw, Discard(Hearts,Ace),Draw,Draw],
+		       50) = 17
+	     then 1 else 0;
 
 val test11 = if officiate ([(Clubs, Num 1),(Spades, Ace),(Diamonds, Num 8),(Hearts, Ace),(Diamonds, Num 5),(Diamonds, Jack),(Diamonds, King),(Spades, Num 1),(Clubs, Num 8),(Hearts, Num 3),(Spades, Num 7),(Diamonds, Queen),(Clubs, Ace),(Clubs, Jack),(Hearts, Num 7),(Diamonds, Num 5),(Spades, Num 4),(Hearts, Num 6),(Clubs, Num 8),(Spades, Num 8)],
 		       [Draw, Draw, Discard(Clubs, Num 1), Draw, Draw, Discard(Hearts, Ace), Draw, Draw, Draw, Discard(Diamonds, Jack), Draw, Draw, Draw, Discard(Spades, Num 1), Draw, Draw],

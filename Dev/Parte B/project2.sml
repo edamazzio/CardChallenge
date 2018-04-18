@@ -120,7 +120,7 @@ fun officiate (card_list, move_list, goal) =
         else
           (case move_list_hd of
             (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
-            Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(card_list, c, IllegalMove))
+            Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(held_cards, c, IllegalMove))
             (* Si es Draw,
             si la card_list está vacía, retorna score,
             si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
