@@ -51,15 +51,19 @@ fun card_value c =
       | xs::ys => if c = xs then remove_card(ys,c)
                   else xs::remove_card(ys,c);*)
 
-fun remove_card (cl: card list, c : card, e) =
+fun remove_card (cl, c, e) =
   let fun found ([], c) = false
     | found (cl as hd::tl, c) = if hd = c then true else found (tl, c)
     in
       if found(cl, c) then
-        (case cl of
-            []=>[]
-            | xs::ys => if c = xs then remove_card(ys,c,e)
-                        else xs::remove_card(ys,c,e))
+        let fun remove_aux(cl, c) =
+          (case cl of
+              []=>[]
+              | xs::ys => if c = xs then remove_aux(ys,c)
+                          else xs::remove_aux(ys,c))
+        in
+          remove_aux(cl,c)
+        end
       else raise e
     end
 
