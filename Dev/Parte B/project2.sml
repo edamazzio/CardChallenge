@@ -234,3 +234,9 @@ fun careful_player(card_list, goal) =
   in
     rev (careful_aux(card_list, [], goal, []))
   end
+
+(*
+val a = [(Clubs, Num 5),(Diamonds, Ace),(Hearts, Queen), (Spades, Ace)];
+val b = careful_player (a, 32);
+officiate(a, b, 32);
+*)
