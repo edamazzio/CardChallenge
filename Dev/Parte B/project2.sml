@@ -218,20 +218,26 @@ which_card_to_discard (a, 35); (*retorna NONE : (suit * rank) option *)
 
 fun careful_player(card_list, goal) =
   let
+    (* Si card_list viene vacía, retorne move_list  *)
     fun careful_aux ([], move_list, _, _) = move_list
     | careful_aux (card_list as cl_hd::cl_tl, move_list, goal, held_cards) =
+    (* Si el score ya es 0, retorne move_list  *)
       if (card_list = []) orelse score (held_cards, goal) = 0
         then move_list
         else
+          (* Checkea si se puede obtener 0 tomando una carta de card_list y botando alguna *)
           let val card_to_discard = which_card_to_discard (cl_hd::held_cards, goal)
           in
+            (* If so, meta un draw y un discard de dicha carta *)
             if isSome card_to_discard
               then Draw::(Discard(valOf card_to_discard)::move_list)
               else
+                (* Si el goal es mayor en 10 que el valor de las held-cards, Draw *)
                 if (goal - (sum_cards held_cards))  >= 10 then careful_aux(cl_tl, Draw::move_list, goal, cl_hd::held_cards)
                 else move_list
           end
   in
+    (* Retorna move_list en orden inverso *)
     rev (careful_aux(card_list, [], goal, []))
   end
 
