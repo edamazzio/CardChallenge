@@ -157,30 +157,80 @@ fun score_challenge (held_cards, goal) =
 
 
 
-  fun officiate_challenge (card_list, move_list, goal) =
-      (* Si move_list es vacía, retorna el score_challenge*)
-      let fun officiate_helper (card_list, [], goal, held_cards) =  score_challenge(held_cards, goal)
-       | officiate_helper ([], move_list as move_list_hd::move_list_tl, goal, held_cards) =
-       (case move_list_hd of
-         (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
-         Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(card_list, c, IllegalMove))
-         (* Si es Draw,
-         si la card_list está vacía, retorna score_challenge,
-         si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
-       | Draw => score_challenge(held_cards, goal))
+fun officiate_challenge (card_list, move_list, goal) =
+    (* Si move_list es vacía, retorna el score_challenge*)
+    let fun officiate_helper (card_list, [], goal, held_cards) =  score_challenge(held_cards, goal)
+     | officiate_helper ([], move_list as move_list_hd::move_list_tl, goal, held_cards) =
+     (case move_list_hd of
+       (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
+       Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(card_list, c, IllegalMove))
+       (* Si es Draw,
+       si la card_list está vacía, retorna score_challenge,
+       si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
+     | Draw => score_challenge(held_cards, goal))
 
+    (* Si vienen todos los parámetros *)
+      | officiate_helper (card_list as card_list_hd::card_list_tl, move_list as move_list_hd::move_list_tl, goal, held_cards) =
+        if (sum_cards held_cards > goal) then  score_challenge(held_cards, goal)
+        else
+          (case move_list_hd of
+            (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
+            Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(held_cards, c, IllegalMove))
+            (* Si es Draw,
+            si la card_list está vacía, retorna score_challenge,
+            si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
+          | Draw => officiate_helper(card_list_tl, move_list_tl, goal, card_list_hd::held_cards));
+    in
+      officiate_helper(card_list, move_list, goal, [])
+    end
 
-      (* Si vienen todos los parámetros *)
-        | officiate_helper (card_list as card_list_hd::card_list_tl, move_list as move_list_hd::move_list_tl, goal, held_cards) =
-          if (sum_cards held_cards > goal) then  score_challenge(held_cards, goal)
-          else
-            (case move_list_hd of
-              (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
-              Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(held_cards, c, IllegalMove))
-              (* Si es Draw,
-              si la card_list está vacía, retorna score_challenge,
-              si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
-            | Draw => officiate_helper(card_list_tl, move_list_tl, goal, card_list_hd::held_cards));
-      in
-        officiate_helper(card_list, move_list, goal, [])
-      end
+fun which_card_to_discard (held_cards, goal) =
+  let
+    (* retorna el score de held cards si se remueve x carta*)
+    fun score_if_discard_card card = score (remove_card(held_cards, card, IllegalMove),  goal)
+    (* Retorna el index de un 0 si lo encuentra en la lista, si no, retorna -1*)
+    fun index_of_zero (score_list, index) =
+      (case score_list of
+          [] => ~1
+        | hd::tl => if hd = 0 then index else index_of_zero(tl, index+1))
+    val index_to_discard = index_of_zero(map score_if_discard_card held_cards, 0)
+  in
+    if index_to_discard <> ~1
+      (* retorna la carta *)
+      then SOME (List.nth(held_cards, index_to_discard))
+      else NONE
+  end
+(*
+(* La suma de estas da  35 (sum_cards a)*)
+val a = [(Clubs, Num 5),(Diamonds, Ace),(Hearts, Queen), (Spades, Num 2), (Spades, Num 7)];
+
+(* Si corremos el score de esta con goal 35, da 0 *)
+score (a, 35);
+
+(* Para generar un test, podemos correr un test con score 35 - (algún valor de alguna carta)
+para probar que el agoritmo me dice cual carta le puedo hacer discard para tener sore de 0*)
+which_card_to_discard (a, 33); (* retorna  SOME (Spades,Num 2) : (suit * rank) option *)
+which_card_to_discard (a, 24); (* retorna SOME (Diamonds,Ace) : (suit * rank) option *)
+which_card_to_discard (a, 35); (*retorna NONE : (suit * rank) option *)
+*)
+
+(*  [Draw, Draw, Discard(Clubs, Num 1)] *)
+
+fun careful_player(card_list, goal) =
+  let
+    fun careful_aux ([], move_list, _, _) = move_list
+    | careful_aux (card_list as cl_hd::cl_tl, move_list, goal, held_cards) =
+      if (card_list = []) orelse score (held_cards, goal) = 0
+        then move_list
+        else
+          let val card_to_discard = which_card_to_discard (cl_hd::held_cards, goal)
+          in
+            if isSome card_to_discard
+              then Draw::(Discard(valOf card_to_discard)::move_list)
+              else
+                if (goal - (sum_cards held_cards))  >= 10 then careful_aux(cl_tl, Draw::move_list, goal, cl_hd::held_cards)
+                else move_list
+          end
+  in
+    rev (careful_aux(card_list, [], goal, []))
+  end
