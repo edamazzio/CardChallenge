@@ -106,8 +106,8 @@ fun officiate (card_list, move_list, goal) =
     let fun officiate_helper (card_list, [], goal, held_cards) =  score(held_cards, goal)
      | officiate_helper ([], move_list as move_list_hd::move_list_tl, goal, held_cards) =
      (case move_list_hd of
-       (* Si es discard, llamo a la recursión llamando a remove_card sobre card_list *)
-       Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(card_list, c, IllegalMove))
+       (* Si es discard, llamo a la recursión llamando a remove_card sobre held_cards *)
+       Discard c => officiate_helper(card_list, move_list_tl, goal, remove_card(held_cards, c, IllegalMove))
        (* Si es Draw,
        si la card_list está vacía, retorna score,
        si no llamo a la recursión con el tail de card_list y el cons de card_list_hd en held_cards *)
@@ -140,19 +140,57 @@ val test6 = score ([(Hearts, Num 2),(Clubs, Num 4)],10)
 val test7 = officiate ([(Hearts, Num 2),(Clubs, Num 4)],[Draw], 15)
 val test8 = officiate ([(Clubs,Ace),(Spades,Ace),(Clubs,Ace),(Spades,Ace)],[Draw,Draw,Draw,Draw,Draw],42) *)
 
+(* Cambia todos los aces por unos *)
+fun all_aces2ones [] = []
+| all_aces2ones (cl:card list as xs::ys) =
+          if (#2 xs) = Ace then all_aces2ones ((#1 xs, Num 1)::ys)
+          else xs::all_aces2ones ys
 
+(* Cambia n aces por unos *)
+fun aces2one ([], _) = []
+| aces2one(xs::ys, n) =
+  if (#2 xs) = Ace andalso n > 0 then aces2one (((#1 xs, Num 1)::ys), n-1)
+  else xs::aces2one (ys, n)
+
+
+(* Changes the first occurance *)
 fun ace2one [] = []
 | ace2one (cl:card list as xs::ys) =
-          if (#2 xs) = Ace then ace2one ((#1 xs, Num 1)::ys)
+          if (#2 xs) = Ace then (#1 xs, Num 1)::ys
           else xs::ace2one ys
+
+fun num_of_aces_to_remove (card_list, goal)=
+  let
+    (* Definición de fold sin currying *)
+    fun fold (f, acc, xs) =
+      (case xs of
+          [] => acc
+        | x::xs => fold (f, f(acc, x), xs))
+    (* Cuenta cuántos aces hay usando fold *)
+    fun count_aces list = fold ((fn (x, y) => if card_value y = 11 then x+1 else x), 0, card_list);
+    fun num_of_aces_to_remove_aux (card_list, acc, curr_score, total_aces) =
+      if total_aces = 0 then acc else
+      let
+        val new_card_list = ace2one card_list
+        val new_score = score (new_card_list, goal)
+        in
+          if new_score < curr_score then num_of_aces_to_remove_aux(new_card_list, acc+1, new_score, total_aces -1)
+          else num_of_aces_to_remove_aux (new_card_list, acc, curr_score, total_aces -1)
+        end
+    in
+      num_of_aces_to_remove_aux(card_list, 0, score(card_list, goal), count_aces card_list)
+    end
+
+fun get_smallest_score_list_of_aces (card_list, goal) =
+  aces2one(card_list, num_of_aces_to_remove(card_list, goal));
 
 
 fun score_challenge (held_cards, goal) =
   let
-    val scoreOnes = score((ace2one held_cards), goal)
+    val scoreOnes = score (get_smallest_score_list_of_aces(held_cards, goal), goal)
     val scoreAces = score (held_cards, goal)
   in
-    if scoreOnes < scoreAces then scoreAces else scoreOnes
+    if scoreOnes < scoreAces then scoreOnes else scoreAces
   end
 
 
